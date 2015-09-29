@@ -15,7 +15,7 @@ def open_and_read_file(file_path):
     return text
 
 
-def make_chains(text_string):
+def make_chains(text_string, size_of_ngram):
     """Takes input text as string; returns dictionary of markov chains.
 
     A chain will be a key that consists of a tuple of (word1, word2)
@@ -31,23 +31,33 @@ def make_chains(text_string):
     chains = {}
     word_list = text_string.split()
 
-    #initialize first and second words (which will become the tuple/key) with the first two words
-    #in the text
-    first_word = word_list.pop(0)
-    second_word = word_list.pop(0)
+    #initialize first ngram (which will become the tuple/key) with the first n words in the text
+    ngram_list = []
+    for i in range(size_of_ngram):
+        ngram_list.append(word_list.pop(0))
+    ngram = tuple(ngram_list)
+    
+    # OLD CODE FOR BIGRAMS:
+    # first_word = word_list.pop(0)
+    # second_word = word_list.pop(0)
 
-    # for each word in our text, add it to the dictionary entry for the bigram preceeding it
+    # for each word in our text, add it to the dictionary entry for the ngram preceeding it
     for word in word_list:
-        if (first_word, second_word) in chains:
-            chains[(first_word, second_word)].append(word)
+        if ngram in chains:
+            chains[ngram].append(word)
         else:
-            chains[(first_word, second_word)] = [word]
+            chains[ngram] = [word]
 
         # also would work:
         # chains[(first_word, second_word)] = chains.get((first_word, second_word), []) + [word]
 
-        first_word = second_word
-        second_word = word
+        # OLD CODE FOR BIGRAMS:
+        # first_word = second_word
+        # second_word = word
+
+        ngram_list.pop(0)
+        ngram_list.append(word)
+        ngram = tuple(ngram_list)
         
     return chains
 
@@ -82,6 +92,7 @@ def make_text(chains):
 
 
 input_path = argv[1]
+size_of_ngram = argv[2]
 
 # Open the file and turn it into one long string
 input_text = open_and_read_file(input_path)
