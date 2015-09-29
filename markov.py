@@ -5,13 +5,11 @@ def open_and_read_file(file_path):
     """Takes file path as string; returns text as string.
 
     Takes a string that is a file path, opens the file, and turns
-    the file's contents as one string of text, processing text to
-    remove linebreaks.
+    the file's contents as one string of text.
     """
 
     text_file = open(file_path)
     text = text_file.read()
-    text = text.replace("\n", " ")
 
     return text
 
@@ -30,7 +28,7 @@ def make_chains(text_string):
     """
 
     chains = {}
-    word_list = text_string.split(" ")
+    word_list = text_string.split()
 
     #initialize first and second words (which will become the tuple/key) with the first two words
     #in the text
@@ -49,8 +47,6 @@ def make_chains(text_string):
 
         first_word = second_word
         second_word = word
-
-        
         
     return chains
 
@@ -59,18 +55,26 @@ def make_text(chains):
     """Takes dictionary of markov chains; returns random text."""
 
 
-    bigrams = chains.keys()
+    bigrams = chains.keys()  # list of bigrams
     end_reached = False
-    active_bigram = choice(bigrams)
+
+    # get first bigram and use it (capitalized) to start our text
+    active_bigram = choice(bigrams)  
     text = "{first} {second}".format(first=active_bigram[0].capitalize(), second=active_bigram[1])
 
+    # until we reach the end (flagged by an empty list of following words), keep picking a random word from the
+    # active bigram's list of followers
     while not end_reached:
         try:
-            possible_next_words = chains[active_bigram]
-            new_word = choice(possible_next_words)
+            possible_next_words = chains[active_bigram]  # if at end, throws KeyError
+            new_word = choice(possible_next_words)  # if at end, throws IndexError
             text += " {new}".format(new=new_word)
+
+            # set active_bigram to be new final two words
             active_bigram = (active_bigram[1], new_word)
-        except (IndexError, KeyError):
+
+        #will happen when we hit a bigram with no folowers
+        except (KeyError, IndexError):
             end_reached = True
 
     return text
