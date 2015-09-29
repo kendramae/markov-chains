@@ -66,25 +66,33 @@ def make_text(chains):
     """Takes dictionary of markov chains; returns random text."""
 
 
-    bigrams = chains.keys()  # list of bigrams
+    ngrams = chains.keys()  # list of ngrams
     end_reached = False
 
-    # get first bigram and use it (capitalized) to start our text
-    active_bigram = choice(bigrams)  
-    text = "{first} {second}".format(first=active_bigram[0].capitalize(), second=active_bigram[1])
+    # get first ngram and use it (capitalized) to start our text
+    active_ngram = list(choice(ngrams))
+    text = "{}".format(active_ngram[0].capitalize())
+    if len(active_ngram) > 1:
+        for word in active_ngram[1:]:  #everything but the first word in the n-gram
+            text += " {}".format(word)
+
+    # text = "{first} {second}".format(first=active_ngram[0].capitalize(), second=active_ngram[1])
 
     # until we reach the end (flagged by an empty list of following words), keep picking a random word from the
-    # active bigram's list of followers
+    # active ngram's list of followers
     while not end_reached:
         try:
-            possible_next_words = chains[active_bigram]  # if at end, throws KeyError
+            possible_next_words = chains[tuple(active_ngram)]  # if at end, throws KeyError
             new_word = choice(possible_next_words)  # if at end, throws IndexError
             text += " {new}".format(new=new_word)
 
-            # set active_bigram to be new final two words
-            active_bigram = (active_bigram[1], new_word)
+            # set active_ngram to be new final n words
+            active_ngram.pop(0)
+            active_ngram.append(new_word)
 
-        #will happen when we hit a bigram with no folowers
+            # active_ngram = (active_ngram[1], new_word)
+
+        #will happen when we hit an ngram with no folowers
         except (KeyError, IndexError):
             end_reached = True
 
@@ -92,13 +100,13 @@ def make_text(chains):
 
 
 input_path = argv[1]
-size_of_ngram = argv[2]
+size_of_ngram = int(argv[2])
 
 # Open the file and turn it into one long string
 input_text = open_and_read_file(input_path)
 
 # Get a Markov chain
-chains = make_chains(input_text)
+chains = make_chains(input_text, size_of_ngram)
 
 # Produce random text
 random_text = make_text(chains)
