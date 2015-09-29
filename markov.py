@@ -5,10 +5,13 @@ def open_and_read_file(file_path):
     """Takes file path as string; returns text as string.
 
     Takes a string that is a file path, opens the file, and turns
-    the file's contents as one string of text.
+    the file's contents as one string of text, processing text to
+    remove linebreaks.
     """
 
-    # your code goes here
+    text_file = open(file_path)
+    text = text_file.read()
+    text = text.replace("\n", " ")
 
     return text
 
