@@ -44,20 +44,34 @@ def make_chains(text_string):
         else:
             chains[(first_word, second_word)] = [word]
 
+        # also would work:
+        # chains[(first_word, second_word)] = chains.get((first_word, second_word), []) + [word]
+
         first_word = second_word
         second_word = word
 
         
-
+        
     return chains
 
 
 def make_text(chains):
     """Takes dictionary of markov chains; returns random text."""
 
-    text = ""
 
-    # your code goes here
+    bigrams = chains.keys()
+    end_reached = False
+    active_bigram = choice(bigrams)
+    text = "{first} {second}".format(first=active_bigram[0].capitalize(), second=active_bigram[1])
+
+    while not end_reached:
+        try:
+            possible_next_words = chains[active_bigram]
+            new_word = choice(possible_next_words)
+            text += " {new}".format(new=new_word)
+            active_bigram = (active_bigram[1], new_word)
+        except (IndexError, KeyError):
+            end_reached = True
 
     return text
 
