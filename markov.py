@@ -30,8 +30,24 @@ def make_chains(text_string):
     """
 
     chains = {}
+    word_list = text_string.split(" ")
 
-    # your code goes here
+    #initialize first and second words (which will become the tuple/key) with the first two words
+    #in the text
+    first_word = word_list.pop(0)
+    second_word = word_list.pop(0)
+
+    # for each word in our text, add it to the dictionary entry for the bigram preceeding it
+    for word in word_list:
+        if (first_word, second_word) in chains:
+            chains[(first_word, second_word)].append(word)
+        else:
+            chains[(first_word, second_word)] = [word]
+
+        first_word = second_word
+        second_word = word
+
+        
 
     return chains
 
