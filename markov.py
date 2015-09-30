@@ -15,43 +15,49 @@ def open_and_read_file(file_path):
     return text
 
 
-def make_chains(size_of_ngram, text_string1, text_string2=None):
-    """Takes input text as string; returns dictionary of markov chains.
+def add_text_to_chains(chains, size_of_ngram, text_string):
+    """
+    Takes a dictionary (our dictionary of chains) and a text string; returns the same dictionary
+    with markov chains added from the text string.
 
-    A chain will be a key that consists of a tuple of (word1, word2)
-    and the value would be a list of the word(s) that follow those two
-    words in the input text.
+    A chain will be a key that consists of a tuple of (word1, word2, ..., wordn)
+    and the value would be a list of the word(s) that follow those n words in the input text.
 
-    For example:
-
-        >>> make_chains("hi there mary hi there juanita")
+       >>> make_chains({}, 2, "hi there mary hi there juanita")
         {('hi', 'there'): ['mary', 'juanita'], ('there', 'mary'): ['hi'], ('mary', 'hi': ['there']}
+
+    """
+    word_list = text_string.split()
+    word_list.append(None)
+
+    #initialize first ngram (which will become the tuple/key) with the first n words in the text
+    ngram_list = []
+    for i in range(size_of_ngram):
+        ngram_list.append(word_list[i])
+    ngram = tuple(ngram_list)
+    
+    # for each word in our text, add it to the dictionary entry for the ngram preceeding it
+    for word in word_list:
+        if ngram in chains:
+            chains[ngram].append(word)
+        else:
+            chains[ngram] = [word]
+
+        ngram = ngram[1:] + (word,)
+
+    return chains
+
+
+
+def make_master_chains_dict(size_of_ngram, text_strings_list):
+    """Takes the size_of_ngram and a list of text strings, feeds those to add_text_to_chains; 
+    returns one dictionary with all markov chains.
     """
 
     chains = {}
-    def add_text_to_chains(text_string):
-        word_list = text_string.split()
-        word_list.append(None)
-
-        #initialize first ngram (which will become the tuple/key) with the first n words in the text
-        ngram_list = []
-        for i in range(size_of_ngram):
-            ngram_list.append(word_list[i])
-        ngram = tuple(ngram_list)
-        
-        # for each word in our text, add it to the dictionary entry for the ngram preceeding it
-        for word in word_list:
-            if ngram in chains:
-                chains[ngram].append(word)
-            else:
-                chains[ngram] = [word]
-
-            ngram = ngram[1:] + (word,)
+    for text_string in text_strings_list:
+        chains = add_text_to_chains(chains, size_of_ngram, text_string)
     
-    add_text_to_chains(text_string1)
-    if text_string2 != None:
-        add_text_to_chains(text_string2)
-
     return chains
 
 
@@ -68,8 +74,8 @@ def make_text(chains):
     #put the initial n-gram into the list of words which will be joined to become new text
     text_list = list(active_ngram)
 
-    # until we reach the end (flagged by an empty list of following words), keep picking a random word from the
-    # active ngram's list of followers
+    # until we reach the end (flagged by a None from choice(possible_next_words)), keep picking 
+    # a random word from the active ngram's list of followers
     while True:
         possible_next_words = chains[active_ngram]
         new_word = choice(possible_next_words)
@@ -92,20 +98,22 @@ def make_text(chains):
 
 
 size_of_ngram = int(argv[1])
-input_path1 = argv[2]
 
-# Open the file and turn it into one long string
-input_text1 = open_and_read_file(input_path1)
+#get filepaths from command line
+input_path_list = []
+for arg in argv[2:]:
+    input_path_list.append(arg)
 
-#if there is a second file, get its text
-if len(argv) > 3:
-    input_path2 = argv[3]
-    input_text2 = open_and_read_file(input_path2)
-    chains = make_chains(size_of_ngram, input_text1, input_text2) # Get a Markov chain
-else:
-    chains = make_chains(size_of_ngram, input_text1) # Get a Markov chain
+# Open the file(s) and turn it/them into one long string, which then gets added to list of text strings
+input_text_list = []
+for input_path in input_path_list:
+    text_string = open_and_read_file(input_path)
+    input_text_list.append(text_string)
+
+#create master dictionary of chains
+master_chains_dict = make_master_chains_dict(size_of_ngram, input_text_list)
 
 # Produce random text
-random_text = make_text(chains)
+random_text = make_text(master_chains_dict)
 
 print random_text
