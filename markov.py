@@ -31,10 +31,15 @@ def make_chains(text_string, size_of_ngram):
     chains = {}
     word_list = text_string.split()
 
+    # for i in range(len(word_list)-size_of_ngram):
+
+    #     key = tuple(word_list[i:i+size_of_ngram])
+    #     value = word_list[size_of_ngram+1]      
+
     #initialize first ngram (which will become the tuple/key) with the first n words in the text
     ngram_list = []
     for i in range(size_of_ngram):
-        ngram_list.append(word_list.pop(0))
+        ngram_list.append(word_list[i])
     ngram = tuple(ngram_list)
     
     # OLD CODE FOR BIGRAMS:
@@ -55,9 +60,14 @@ def make_chains(text_string, size_of_ngram):
         # first_word = second_word
         # second_word = word
 
-        ngram_list.pop(0)
-        ngram_list.append(word)
-        ngram = tuple(ngram_list)
+        ngram = ngram[1:] + (word,)
+       
+        #would also work:
+        # ngram_list.pop(0)
+        # ngram_list.append(word)
+        # ngram = tuple(ngram_list)
+
+
         
     return chains
 
@@ -65,37 +75,36 @@ def make_chains(text_string, size_of_ngram):
 def make_text(chains):
     """Takes dictionary of markov chains; returns random text."""
 
-
-    ngrams = chains.keys()  # list of ngrams
     end_reached = False
 
     # get first ngram and use it (capitalized) to start our text
-    active_ngram = list(choice(ngrams))
-    text = "{}".format(active_ngram[0].capitalize())
-    if len(active_ngram) > 1:
-        for word in active_ngram[1:]:  #everything but the first word in the n-gram
-            text += " {}".format(word)
+    ngrams = chains.keys()  # list of ngrams
+    active_ngram = choice(ngrams)  # pick a random starting n-gram
 
-    # text = "{first} {second}".format(first=active_ngram[0].capitalize(), second=active_ngram[1])
+    # if our current starting n-gram doesn't begin with a capital, choose another until it does
+    while not active_ngram[0][0].isupper():
+        active_ngram = choice(ngrams)
+
+    #put the initial n-gram into the list of words in the new text
+    text_list = list(active_ngram)
 
     # until we reach the end (flagged by an empty list of following words), keep picking a random word from the
     # active ngram's list of followers
+
     while not end_reached:
         try:
-            possible_next_words = chains[tuple(active_ngram)]  # if at end, throws KeyError
+            possible_next_words = chains[active_ngram]  # if at end, throws KeyError
             new_word = choice(possible_next_words)  # if at end, throws IndexError
-            text += " {new}".format(new=new_word)
+            text_list.append(new_word)
 
             # set active_ngram to be new final n words
-            active_ngram.pop(0)
-            active_ngram.append(new_word)
-
-            # active_ngram = (active_ngram[1], new_word)
+            active_ngram = active_ngram[1:] + (new_word,)
 
         #will happen when we hit an ngram with no folowers
         except (KeyError, IndexError):
             end_reached = True
 
+    text = " ".join(text_list)
     return text
 
 
